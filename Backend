@@ -1,0 +1,6 @@
+mkdir -p backend/src/config
+mkdir -p backend/src/middleware
+mkdir -p backend/src/routes
+mkdir -p backend/src/controllers
+mkdir -p database
+mkdir -p frontend
