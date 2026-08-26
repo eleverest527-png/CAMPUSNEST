@@ -1,50 +1,38 @@
 # CampusNest
 
-A mobile-first student accommodation platform for students in Delta State, Nigeria.
+CampusNest is a mobile-first accommodation platform for students around DELSU Abraka and FUPRE in Delta State, Nigeria. Students can browse approved listings, save homes and contact agents. Agents can submit listings for review, while administrators moderate the marketplace.
 
-## Included in this first production-ready foundation
+## Technology
 
-- Responsive student housing homepage
-- Search and filtering
-- Listing cards and detail pages
-- Saved/favorite homes
-- Email/password authentication through Supabase
-- Student/landlord/agent profile roles in the database
-- Property submission workflow (`pending` until reviewed)
-- Row Level Security policies
-- Supabase database schema
-- Mobile-friendly UI
-- Demo listings so the frontend works before Supabase is connected
+- Vanilla HTML, CSS and JavaScript frontend
+- Node.js and Express API
+- Supabase PostgreSQL, Auth and Storage
+- Render-ready single service deployment
 
-## Run
+## Run locally
 
-```bash
-npm install
-npm run dev
-```
+1. Install Node.js 18 or newer.
+2. Run `npm install`.
+3. Copy `.env.example` to `.env` and add the Supabase URL, anon key and service-role key.
+4. In Supabase SQL Editor, run `supabase/schema.sql`.
+5. Run `npm run dev`, then open `http://localhost:3000`.
 
-## Supabase
+Without Supabase variables, the server still starts and `/api/health` works, but listings and authentication are unavailable until configuration is added.
 
-1. Create a Supabase project.
-2. Open SQL Editor.
-3. Run `supabase/schema.sql`.
-4. Copy `.env.example` to `.env`.
-5. Add your Supabase URL and anon key.
-6. Restart the dev server.
+## Supabase setup
 
-Never put the Supabase service-role key in this frontend.
+Run the supplied schema once. It creates profiles, properties, images, favorites, messages, indexes, the new-user profile trigger, RLS policies and a public `property-images` Storage bucket. The service-role key belongs only in the backend `.env`; never expose it in frontend code.
 
-## Next production modules
+Enable Email provider under Authentication. Registration stores the selected role in Auth metadata, and the database trigger creates the matching profile. For an admin, register normally, then change that profile's role to `admin` in the Supabase dashboard. Review Storage policies before production and consider limiting uploads to authenticated listing owners.
 
-- Supabase Storage for listing images
-- Admin moderation dashboard
-- Landlord/agent verification
-- Real-time messaging
-- WhatsApp/deep-link contact
-- Notifications
-- Map/location support
-- Payment gateway and featured listings
-- Report/scam protection workflow
-- Terms, privacy and safety pages
-- Analytics
-- Play Store packaging/PWA
+## API
+
+`GET /api/health`, `GET /api/properties`, `GET /api/properties/:id`, `POST/PUT/DELETE /api/properties/:id`, `GET/POST/DELETE /api/favorites`, and `GET/PATCH /api/users/profile` are implemented. Admin overview and moderation are under `/api/admin`. Protected routes require `Authorization: Bearer <Supabase access token>`.
+
+## Deploy to Render
+
+Create a Web Service from this repository. Build command: `npm install`. Start command: `npm start`. Add `PORT` (Render supplies this), `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `FRONTEND_URL` in the Render environment settings. The service serves both the frontend and API, so no separate frontend host is required.
+
+## Security and production notes
+
+Passwords are handled by Supabase Auth and never stored by CampusNest. Validate and constrain image uploads before enabling the upload UI in your preferred Storage flow. Keep the service-role key private, rotate it if exposed, use a real frontend origin instead of `*`, and add email verification, rate limiting and abuse/report review before a public launch.

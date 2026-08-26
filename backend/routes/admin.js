@@ -1,0 +1,6 @@
+import { Router } from 'express';
+import { requireAuth, requireRole } from '../middleware/auth.js';
+const router=Router(); router.use(requireAuth,requireRole('admin'));
+router.get('/overview',async(req,res)=>{const db=req.app.locals.supabase;const [users,properties,pending]=await Promise.all([db.from('profiles').select('id,role,full_name,email,created_at').order('created_at',{ascending:false}),db.from('properties').select('*',{count:'exact',head:true}),db.from('properties').select('*,profiles!properties_owner_id_fkey(full_name)').eq('approval_status','pending').order('created_at',{ascending:false})]);res.json({users:users.data??[],totalProperties:properties.count??0,pending:pending.data??[]});});
+router.patch('/properties/:id',async(req,res)=>{const status=['approved','rejected','removed'].includes(req.body.approval_status)?req.body.approval_status:null;if(!status)return res.status(400).json({error:'Invalid moderation status.'});const {data,error}=await req.app.locals.supabase.from('properties').update({approval_status:status,verification_status:status==='approved'?'verified':'rejected',updated_at:new Date().toISOString()}).eq('id',req.params.id).select().single();if(error)return res.status(400).json({error:error.message});res.json(data);});
+export default router;

@@ -1,0 +1,11 @@
+import 'dotenv/config';
+import express from 'express'; import cors from 'cors'; import helmet from 'helmet'; import morgan from 'morgan'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { supabase, configured } from './services/supabase.js'; import properties from './routes/properties.js'; import favorites from './routes/favorites.js'; import users from './routes/users.js'; import admin from './routes/admin.js';
+const __dirname=path.dirname(fileURLToPath(import.meta.url)); const app=express();
+app.locals.supabase=supabase; app.use(helmet({contentSecurityPolicy:false})); app.use(cors({origin:process.env.FRONTEND_URL||true})); app.use(express.json({limit:'1mb'})); app.use(morgan('tiny'));
+app.get('/api/health',(req,res)=>res.json({ok:true,configured,message:configured?'CampusNest API ready':'Add Supabase environment variables to enable data access.'}));
+app.get('/api/config',(req,res)=>res.json({supabaseUrl:process.env.SUPABASE_URL||'',supabaseAnonKey:process.env.SUPABASE_ANON_KEY||''}));
+app.use('/api/properties',properties); app.use('/api/favorites',favorites); app.use('/api/users',users); app.use('/api/admin',admin);
+app.use(express.static(path.resolve(__dirname,'..'))); app.get('*',(req,res)=>res.sendFile(path.resolve(__dirname,'..','index.html')));
+app.use((err,req,res,next)=>{console.error(err);res.status(500).json({error:'Something went wrong on the server.'});});
+const port=process.env.PORT||3000; app.listen(port,()=>console.log(`CampusNest listening on port ${port}`));
